@@ -764,7 +764,7 @@ export default function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
+      <div className="flex justify-center items-center h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
         <div className="w-full sm:w-[400px] h-full sm:h-[820px] overflow-hidden flex flex-col relative sm:rounded-[2.8rem] bg-slate-900 sm:border-[10px] border-slate-900 sm:shadow-[0_30px_70px_-15px_rgba(15,23,42,0.5)] sm:ring-1 sm:ring-slate-300">
           {LoginView()}
         </div>
@@ -773,7 +773,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
+    <div className="flex justify-center items-center h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
       <div className="w-full sm:w-[400px] h-full sm:h-[820px] bg-white overflow-hidden flex flex-col relative sm:rounded-[2.8rem] border-slate-900 sm:border-[10px] sm:shadow-[0_30px_70px_-15px_rgba(15,23,42,0.5)] sm:ring-1 sm:ring-slate-300">
         {/* Main Content Area */}
         <div className="flex-1 overflow-hidden relative">

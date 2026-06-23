@@ -6,6 +6,28 @@ import {
   Sparkles
 } from 'lucide-react';
 
+// Branded gradient + icon header images, generated inline so news always
+// shows a header image without depending on an external image host.
+const newsImg = (from, to, icon) => `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">` +
+  `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+  `<stop offset="0%" stop-color="${from}"/><stop offset="100%" stop-color="${to}"/>` +
+  `</linearGradient></defs>` +
+  `<rect width="400" height="200" fill="url(#g)"/>` +
+  `<circle cx="200" cy="100" r="46" fill="#fff" opacity="0.16"/>` +
+  icon +
+  `</svg>`
+)}`;
+
+const NEWS_IMG_APD = newsImg('#fbbf24', '#d97706',
+  '<path d="M170,106 a30,26 0 0 1 60,0 z" fill="#fff"/><rect x="166" y="104" width="68" height="9" rx="3" fill="#fff"/><rect x="166" y="104" width="68" height="3" fill="#fde68a"/>');
+const NEWS_IMG_FIRE = newsImg('#38bdf8', '#0369a1',
+  '<path d="M200,70 C214,86 220,98 220,110 C220,124 211,132 200,132 C189,132 180,124 180,110 C180,99 185,90 193,82 C194,92 199,93 200,85 C202,78 199,75 200,70 Z" fill="#fff"/>');
+const NEWS_IMG_AWARD = newsImg('#34d399', '#0d9488',
+  '<path d="M182,78 h36 v18 c0,14 -8,24 -18,24 c-10,0 -18,-10 -18,-24 z" fill="#fff"/><path d="M182,82 c-11,0 -18,7 -18,15 c0,8 6,14 14,15" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M218,82 c11,0 18,7 18,15 c0,8 -6,14 -14,15" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><rect x="193" y="120" width="14" height="10" fill="#fff"/><rect x="184" y="130" width="32" height="7" rx="2" fill="#fff"/>');
+const NEWS_IMG_DEFAULT = newsImg('#10b981', '#047857',
+  '<path d="M200,72 c-14,0 -22,12 -22,28 v14 l-8,10 h60 l-8,-10 v-14 c0,-16 -8,-28 -22,-28 z" fill="#fff"/><circle cx="200" cy="132" r="7" fill="#fff"/>');
+
 const NEWS_ITEMS = [
   {
     id: 1,
@@ -15,10 +37,10 @@ const NEWS_ITEMS = [
     type: "warning",
     summary: "Kewajiban penggunaan helm keselamatan (Safety Helmet) Kelas E terbaru.",
     content: "Berdasarkan evaluasi keselamatan semester pertama, manajemen menetapkan bahwa mulai 1 Juli 2026, seluruh personel yang memasuki area operasional zona kuning dan merah wajib menggunakan Helm Keselamatan (Safety Helmet) Kelas E dengan pelindung benturan samping.\n\nPedoman lengkap telah diperbarui dalam dokumen Sistem Manajemen HSSE. Harap seluruh pekerja dan kontraktor menyesuaikan dengan standar terbaru ini. Inspeksi akan diperketat mulai bulan depan.",
-    image: "https://images.unsplash.com/photo-1541888081-3642eb657736?auto=format&fit=crop&q=80&w=400&h=200",
+    image: NEWS_IMG_APD,
     carousel: [
-      { url: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=400&h=300", caption: "Helm standar kelas E" },
-      { url: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=400&h=300", caption: "Inspeksi kepatuhan di lapangan" }
+      { url: NEWS_IMG_APD, caption: "Helm standar kelas E" },
+      { url: NEWS_IMG_APD, caption: "Inspeksi kepatuhan di lapangan" }
     ]
   },
   {
@@ -29,9 +51,9 @@ const NEWS_ITEMS = [
     type: "info",
     summary: "Jadwal dan rute evakuasi untuk simulasi hari Jumat.",
     content: "Sebagai bagian dari kesiapsiagaan tanggap darurat, simulasi evakuasi kebakaran (Fire Drill) akan dilaksanakan pada:\n\nHari/Tanggal: Jumat, 26 Juni 2026\nWaktu: 09.00 WIB - Selesai\nLokasi: Seluruh area Gedung Utama dan Fasilitas Produksi A\n\nMohon seluruh personel berpartisipasi aktif dan mengikuti arahan dari Floor Warden di masing-masing lantai.",
-    image: "https://images.unsplash.com/photo-1614064506922-442cd26588a5?auto=format&fit=crop&q=80&w=400&h=200",
+    image: NEWS_IMG_FIRE,
     carousel: [
-      { url: "https://images.unsplash.com/photo-1542385151-efd9000785a0?auto=format&fit=crop&q=80&w=400&h=300", caption: "Rute dan titik kumpul evakuasi" }
+      { url: NEWS_IMG_FIRE, caption: "Rute dan titik kumpul evakuasi" }
     ]
   },
   {
@@ -42,9 +64,9 @@ const NEWS_ITEMS = [
     type: "success",
     summary: "Fasilitas Produksi B berhasil mencapai 1 juta jam kerja aman.",
     content: "Apresiasi setinggi-tingginya kepada seluruh tim di Fasilitas Produksi B atas pencapaian luar biasa: 1 Juta Jam Kerja Tanpa Kecelakaan Kerja (Zero LTI) yang tercapai pada pertengahan tahun 2026 ini.\n\nPencapaian ini adalah bukti komitmen kita bersama terhadap budaya HSSE 'Safety First'. Mari kita pertahankan dan tingkatkan kinerja keselamatan di seluruh area operasi.",
-    image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&q=80&w=400&h=200",
+    image: NEWS_IMG_AWARD,
     carousel: [
-      { url: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=400&h=300", caption: "Penghargaan Tim Produksi B" }
+      { url: NEWS_IMG_AWARD, caption: "Penghargaan Tim Produksi B" }
     ]
   }
 ];
@@ -275,7 +297,7 @@ export default function App() {
       type: newsType,
       summary: newsForm.summary,
       content: newsForm.summary,
-      image: newsForm.headerImage || "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=400&h=200",
+      image: newsForm.headerImage || NEWS_IMG_DEFAULT,
       carousel: newsForm.carousel.filter(item => item.url) // Hanya simpan lampiran yang telah diisi foto
     };
 
@@ -352,7 +374,7 @@ export default function App() {
             <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 border-2 border-emerald-600 rounded-full"></span>
           </div>
           <div>
-            <h1 className="font-bold text-base leading-tight">Bot K3 Pertamina</h1>
+            <h1 className="font-bold text-base leading-tight">HSSE Bot</h1>
             <p className="text-emerald-100 text-xs flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse"></span>
               Online · Selalu aktif
@@ -664,7 +686,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="font-bold text-base leading-tight">Tabah Darma · Security</h1>
-            <p className="text-slate-300 text-[11px] font-medium tracking-wide">Contributor Panel • HSSE Shipping & Marine</p>
+            <p className="text-slate-300 text-[11px] font-medium tracking-wide">HSSE Shipping & Marine</p>
           </div>
         </div>
         <button

@@ -4,6 +4,11 @@ Prototipe antarmuka chatbot **HSSE (Health, Safety, Security & Environment)** be
 React + Vite + Tailwind CSS. Berisi 3 modul utama: **Tanya AI** (chat), **Berita &
 Pengumuman**, dan **Kelola Knowledge Base** (khusus Contributor).
 
+**🌐 Demo online:** https://securitypis.github.io/HSSEchatbot/
+
+> Setiap `git push` ke branch `main` otomatis mem-build & men-deploy ulang ke GitHub
+> Pages lewat workflow [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
+
 ## Menjalankan secara lokal
 
 Butuh **Node.js 18+** (teruji di Node 24).

@@ -3,7 +3,7 @@ import {
   Send, Menu, X, ChevronLeft, ChevronRight, Bot, User, Paperclip, Camera, Video,
   MessageSquare, Newspaper, FileText, CheckCircle2, Circle, AlertTriangle,
   Info, Plus, LogOut, UploadCloud, Image as ImageIcon, ShieldCheck,
-  Sparkles, Signal, Wifi, BatteryFull
+  Sparkles
 } from 'lucide-react';
 
 const NEWS_ITEMS = [
@@ -123,13 +123,6 @@ export default function App() {
 
   // State for Admin/Contributor Popup
   const [showInfoPopup, setShowInfoPopup] = useState(false);
-
-  // Live clock for the device status bar
-  const [clock, setClock] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setClock(new Date()), 30000);
-    return () => clearInterval(t);
-  }, []);
 
   const chatContainerRef = useRef(null);
 
@@ -291,20 +284,6 @@ export default function App() {
     setNewsForm({ title: '', summary: '', category: 'Info', headerImage: null, carousel: [] });
     setActiveTab('news');
   };
-
-  const clockLabel = clock.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  // ---- Device status bar (top of the phone frame) ----
-  const StatusBar = ({ dark = false }) => (
-    <div className={`flex items-center justify-between px-6 pt-2 pb-1.5 text-[13px] font-bold shrink-0 ${dark ? 'text-white' : 'text-slate-900'}`}>
-      <span className="tracking-tight">{clockLabel}</span>
-      <div className="flex items-center space-x-1.5">
-        <Signal size={15} strokeWidth={2.5} />
-        <Wifi size={15} strokeWidth={2.5} />
-        <BatteryFull size={20} strokeWidth={2} />
-      </div>
-    </div>
-  );
 
   // ---- Login ----
   const LoginView = () => (
@@ -796,9 +775,6 @@ export default function App() {
   return (
     <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
       <div className="w-full sm:w-[400px] h-full sm:h-[820px] bg-white overflow-hidden flex flex-col relative sm:rounded-[2.8rem] border-slate-900 sm:border-[10px] sm:shadow-[0_30px_70px_-15px_rgba(15,23,42,0.5)] sm:ring-1 sm:ring-slate-300">
-        {/* Device status bar */}
-        <StatusBar />
-
         {/* Main Content Area */}
         <div className="flex-1 overflow-hidden relative">
           {activeTab === 'chat' && ChatView()}
@@ -809,7 +785,6 @@ export default function App() {
         {/* Global News Create Modal */}
         {showNewsModal && (
           <div className="absolute inset-0 z-[60] bg-white flex flex-col animate-slide-up">
-            <StatusBar dark />
             <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 flex items-center justify-between text-white shrink-0 shadow-md relative z-10">
               <div className="flex items-center space-x-2">
                 <button onClick={() => setShowNewsModal(false)} className="p-1 hover:bg-white/15 rounded-lg transition-colors"><X size={20} /></button>

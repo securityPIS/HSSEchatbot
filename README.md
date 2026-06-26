@@ -41,8 +41,10 @@ Di layar login pilih salah satu peran:
 Tips: coba kirim pertanyaan atau klik salah satu **quick-reply**; bot akan menampilkan
 indikator mengetik lalu membalas beserta sumber dokumen rujukannya.
 
-> Tampilan dirancang mobile-first. Di layar lebar (≥ 640px) UI tampil dalam bingkai
-> ponsel; di layar sempit UI mengisi penuh layar seperti aplikasi mobile.
+> Tampilan responsif. Di **desktop** (≥ 1024px) UI tampil sebagai aplikasi web penuh
+> dengan sidebar navigasi di kiri (tanpa bingkai/mockup ponsel). Di **tablet** (640–1023px)
+> UI tampil dalam bingkai ponsel, dan di **ponsel** UI mengisi penuh layar dengan navigasi
+> tab di bawah.
 
 ## Struktur
 

@@ -129,6 +129,20 @@ export default function App() {
 
   const chatContainerRef = useRef(null);
 
+  // Desktop detection — on wide screens (≥1024px) we render a proper desktop
+  // shell (left sidebar nav, full-bleed content) instead of the phone mockup.
+  const DESKTOP_QUERY = '(min-width: 1024px)';
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -765,7 +779,201 @@ export default function App() {
     </div>
   );
 
+  // Navigation entries — shared by the mobile bottom-bar and the desktop sidebar.
+  const NAV_ITEMS = [
+    { key: 'chat', label: 'Tanya AI', Icon: MessageSquare },
+    { key: 'news', label: 'Berita', Icon: Newspaper },
+    ...(userRole === 'contributor' ? [{ key: 'admin', label: 'Kelola', Icon: FileText }] : [])
+  ];
+
+  // The active screen — reused by both the mobile and desktop shells.
+  const ActiveView = () => (
+    <>
+      {activeTab === 'chat' && ChatView()}
+      {activeTab === 'news' && NewsView()}
+      {activeTab === 'admin' && userRole === 'contributor' && AdminView()}
+    </>
+  );
+
+  // Full-screen "create news" overlay — reused by both shells. Positioned
+  // absolute, so it fills whichever content column it is rendered into.
+  const NewsCreateModal = () => (
+    <div className="absolute inset-0 z-[60] bg-white flex flex-col animate-slide-up">
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 flex items-center justify-between text-white shrink-0 shadow-md relative z-10">
+        <div className="flex items-center space-x-2">
+          <button onClick={() => setShowNewsModal(false)} className="p-1 hover:bg-white/15 rounded-lg transition-colors"><X size={20} /></button>
+          <h2 className="font-bold text-sm">Buat Berita Baru</h2>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-5 pb-24 bg-slate-50 soft-scroll">
+        <form id="addNewsForm" onSubmit={handleAddNews} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Judul Berita</label>
+            <input required type="text" value={newsForm.title} onChange={e => setNewsForm({...newsForm, title: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none bg-white" placeholder="Masukkan judul..." />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Kategori Label</label>
+            <select value={newsForm.category} onChange={e => setNewsForm({...newsForm, category: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none bg-white">
+              <option value="Info">Informasi Umum</option>
+              <option value="Regulasi">Regulasi & Aturan</option>
+              <option value="Pencapaian">Pencapaian</option>
+              <option value="Peringatan">Peringatan / Bahaya</option>
+            </select>
+          </div>
+
+          {/* Input Upload Gambar Header */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Gambar Header (Upload)</label>
+            <div className="flex items-center space-x-3">
+              {newsForm.headerImage && (
+                <img src={newsForm.headerImage} alt="Header Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 flex-shrink-0" />
+              )}
+              <div className="relative flex-1">
+                <UploadCloud size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleHeaderImageUpload}
+                  className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer bg-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Input Galeri Foto Dinamis */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700">Galeri Lampiran & Keterangan</label>
+              <button type="button" onClick={handleAddCarouselItem} className="text-xs text-emerald-600 font-bold flex items-center hover:text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg transition-colors">
+                <Plus size={14} className="mr-0.5"/> Tambah Foto
+              </button>
+            </div>
+            <div className="space-y-3">
+              {newsForm.carousel.map((item, index) => (
+                <div key={index} className="p-3 border border-slate-100 bg-white shadow-sm rounded-xl flex items-start space-x-3 relative">
+                  <button type="button" onClick={() => handleRemoveCarouselItem(index)} className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors z-10">
+                    <X size={14} />
+                  </button>
+
+                  {/* Kotak Upload Gambar (Klik pada kotak) */}
+                  <div className="relative w-20 h-20 flex-shrink-0 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden group">
+                    {item.url ? (
+                      <>
+                        <img src={item.url} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-slate-900/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <UploadCloud size={16} className="text-white mb-0.5" />
+                          <span className="text-[8px] text-white font-medium">Ganti</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 group-hover:text-emerald-500 transition-colors">
+                        <Plus size={18} className="mb-1" />
+                        <ImageIcon size={16} />
+                      </div>
+                    )}
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleCarouselImageUpload(index, e)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0"
+                      title="Klik untuk memilih atau mengganti gambar"
+                    />
+                  </div>
+
+                  {/* Field Keterangan di Samping Kanan */}
+                  <div className="flex-1 pr-6 h-20">
+                    <textarea
+                      value={item.caption}
+                      onChange={(e) => handleCarouselCaptionChange(index, e.target.value)}
+                      placeholder="Tulis keterangan foto di sini..."
+                      className="w-full h-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none bg-slate-50"
+                    />
+                  </div>
+                </div>
+              ))}
+              {newsForm.carousel.length === 0 && (
+                <div className="text-xs text-slate-400 italic text-center py-3 bg-white border border-dashed border-slate-300 rounded-xl">Belum ada foto galeri. Klik tambah foto.</div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Isi / Ringkasan Info</label>
+            <textarea required rows="4" value={newsForm.summary} onChange={e => setNewsForm({...newsForm, summary: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none resize-none bg-white" placeholder="Ketik isi berita..."></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] z-10">
+        <button type="submit" form="addNewsForm" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] transition-all flex items-center justify-center space-x-2">
+          <CheckCircle2 size={18} />
+          <span>Publish Info</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  // Left-hand navigation rail shown only on desktop (replaces the phone mockup
+  // + bottom tab bar). Includes branding, primary nav and the user/logout block.
+  const DesktopSidebar = () => (
+    <aside className="w-64 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <div className="px-5 py-5 flex items-center gap-3 border-b border-slate-100">
+        <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 shrink-0">
+          <Bot size={24} className="text-white" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="font-extrabold text-slate-800 leading-tight truncate">HSSE AI Assistant</h1>
+          <p className="text-xs text-slate-400 truncate">Pertamina Patra Niaga</p>
+        </div>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto soft-scroll">
+        {NAV_ITEMS.map(({ key, label, Icon }) => {
+          const active = activeTab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? 'bg-emerald-100 text-emerald-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
+            >
+              <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+              <span>{label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-slate-100 p-3">
+        <div className="flex items-center gap-3 px-2 py-2 mb-1">
+          <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+            {(userName || '?').charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-700 truncate">{userName}</p>
+            <p className="text-xs text-slate-400 capitalize">{userRole}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+        >
+          <LogOut size={16} />
+          <span>Keluar</span>
+        </button>
+      </div>
+    </aside>
+  );
+
   if (!isLoggedIn) {
+    if (isDesktop) {
+      return (
+        <div className="h-[100dvh] overflow-hidden">
+          {LoginView()}
+        </div>
+      );
+    }
     return (
       <div className="flex justify-center items-center h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
         <div className="w-full sm:w-[400px] h-full sm:h-[820px] overflow-hidden flex flex-col relative sm:rounded-[2.8rem] bg-slate-900 sm:border-[10px] border-slate-900 sm:shadow-[0_30px_70px_-15px_rgba(15,23,42,0.5)] sm:ring-1 sm:ring-slate-300">
@@ -775,142 +983,38 @@ export default function App() {
     );
   }
 
+  // ---- Desktop shell: sidebar navigation + full-bleed content (no phone mockup) ----
+  if (isDesktop) {
+    return (
+      <div className="flex h-[100dvh] overflow-hidden bg-slate-100">
+        {DesktopSidebar()}
+        <main className="flex-1 min-w-0 flex justify-center overflow-hidden">
+          <div className="w-full max-w-4xl bg-white flex flex-col relative overflow-hidden shadow-xl shadow-slate-300/40">
+            <div className="flex-1 overflow-hidden relative">
+              {ActiveView()}
+            </div>
+            {showNewsModal && NewsCreateModal()}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ---- Mobile shell: phone mockup frame + bottom tab bar ----
   return (
     <div className="flex justify-center items-center h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 sm:p-4">
       <div className="w-full sm:w-[400px] h-full sm:h-[820px] bg-white overflow-hidden flex flex-col relative sm:rounded-[2.8rem] border-slate-900 sm:border-[10px] sm:shadow-[0_30px_70px_-15px_rgba(15,23,42,0.5)] sm:ring-1 sm:ring-slate-300">
         {/* Main Content Area */}
         <div className="flex-1 overflow-hidden relative">
-          {activeTab === 'chat' && ChatView()}
-          {activeTab === 'news' && NewsView()}
-          {activeTab === 'admin' && userRole === 'contributor' && AdminView()}
+          {ActiveView()}
         </div>
 
         {/* Global News Create Modal */}
-        {showNewsModal && (
-          <div className="absolute inset-0 z-[60] bg-white flex flex-col animate-slide-up">
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 flex items-center justify-between text-white shrink-0 shadow-md relative z-10">
-              <div className="flex items-center space-x-2">
-                <button onClick={() => setShowNewsModal(false)} className="p-1 hover:bg-white/15 rounded-lg transition-colors"><X size={20} /></button>
-                <h2 className="font-bold text-sm">Buat Berita Baru</h2>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 pb-24 bg-slate-50 soft-scroll">
-              <form id="addNewsForm" onSubmit={handleAddNews} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Judul Berita</label>
-                  <input required type="text" value={newsForm.title} onChange={e => setNewsForm({...newsForm, title: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none bg-white" placeholder="Masukkan judul..." />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Kategori Label</label>
-                  <select value={newsForm.category} onChange={e => setNewsForm({...newsForm, category: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none bg-white">
-                    <option value="Info">Informasi Umum</option>
-                    <option value="Regulasi">Regulasi & Aturan</option>
-                    <option value="Pencapaian">Pencapaian</option>
-                    <option value="Peringatan">Peringatan / Bahaya</option>
-                  </select>
-                </div>
-
-                {/* Input Upload Gambar Header */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Gambar Header (Upload)</label>
-                  <div className="flex items-center space-x-3">
-                    {newsForm.headerImage && (
-                      <img src={newsForm.headerImage} alt="Header Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 flex-shrink-0" />
-                    )}
-                    <div className="relative flex-1">
-                      <UploadCloud size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleHeaderImageUpload}
-                        className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Input Galeri Foto Dinamis */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">Galeri Lampiran & Keterangan</label>
-                    <button type="button" onClick={handleAddCarouselItem} className="text-xs text-emerald-600 font-bold flex items-center hover:text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg transition-colors">
-                      <Plus size={14} className="mr-0.5"/> Tambah Foto
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {newsForm.carousel.map((item, index) => (
-                      <div key={index} className="p-3 border border-slate-100 bg-white shadow-sm rounded-xl flex items-start space-x-3 relative">
-                        <button type="button" onClick={() => handleRemoveCarouselItem(index)} className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors z-10">
-                          <X size={14} />
-                        </button>
-
-                        {/* Kotak Upload Gambar (Klik pada kotak) */}
-                        <div className="relative w-20 h-20 flex-shrink-0 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden group">
-                          {item.url ? (
-                            <>
-                              <img src={item.url} alt="Preview" className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-slate-900/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <UploadCloud size={16} className="text-white mb-0.5" />
-                                <span className="text-[8px] text-white font-medium">Ganti</span>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 group-hover:text-emerald-500 transition-colors">
-                              <Plus size={18} className="mb-1" />
-                              <ImageIcon size={16} />
-                            </div>
-                          )}
-
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleCarouselImageUpload(index, e)}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0"
-                            title="Klik untuk memilih atau mengganti gambar"
-                          />
-                        </div>
-
-                        {/* Field Keterangan di Samping Kanan */}
-                        <div className="flex-1 pr-6 h-20">
-                          <textarea
-                            value={item.caption}
-                            onChange={(e) => handleCarouselCaptionChange(index, e.target.value)}
-                            placeholder="Tulis keterangan foto di sini..."
-                            className="w-full h-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none bg-slate-50"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    {newsForm.carousel.length === 0 && (
-                      <div className="text-xs text-slate-400 italic text-center py-3 bg-white border border-dashed border-slate-300 rounded-xl">Belum ada foto galeri. Klik tambah foto.</div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Isi / Ringkasan Info</label>
-                  <textarea required rows="4" value={newsForm.summary} onChange={e => setNewsForm({...newsForm, summary: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none resize-none bg-white" placeholder="Ketik isi berita..."></textarea>
-                </div>
-              </form>
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] z-10">
-              <button type="submit" form="addNewsForm" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] transition-all flex items-center justify-center space-x-2">
-                <CheckCircle2 size={18} />
-                <span>Publish Info</span>
-              </button>
-            </div>
-          </div>
-        )}
+        {showNewsModal && NewsCreateModal()}
 
         {/* Bottom Navigation */}
         <div className="bg-white/95 backdrop-blur border-t border-slate-200 flex justify-around items-center px-2 py-1.5 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 shrink-0">
-          {[
-            { key: 'chat', label: 'Tanya AI', Icon: MessageSquare },
-            { key: 'news', label: 'Berita', Icon: Newspaper },
-            ...(userRole === 'contributor' ? [{ key: 'admin', label: 'Kelola', Icon: FileText }] : [])
-          ].map(({ key, label, Icon }) => {
+          {NAV_ITEMS.map(({ key, label, Icon }) => {
             const active = activeTab === key;
             return (
               <button key={key} onClick={() => setActiveTab(key)} className="flex flex-col items-center w-full py-1 group">

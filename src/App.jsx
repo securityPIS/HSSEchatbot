@@ -358,9 +358,11 @@ export default function App() {
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative">
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 flex items-center shadow-lg shadow-emerald-900/10 z-10 shrink-0">
-        <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-white/15 rounded-full transition-colors mr-2 active:scale-90">
-          <Menu size={20} />
-        </button>
+        {!isDesktop && (
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-white/15 rounded-full transition-colors mr-2 active:scale-90">
+            <Menu size={20} />
+          </button>
+        )}
         <div className="flex items-center space-x-3 flex-1">
           <div className="relative">
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm ring-1 ring-white/30">
@@ -929,7 +931,7 @@ export default function App() {
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto soft-scroll">
+      <nav className="px-3 py-4 space-y-1 shrink-0">
         {NAV_ITEMS.map(({ key, label, Icon }) => {
           const active = activeTab === key;
           return (
@@ -945,7 +947,32 @@ export default function App() {
         })}
       </nav>
 
-      <div className="border-t border-slate-100 p-3">
+      {/* Riwayat Obrolan — dipisahkan dari menu utama dengan jarak & garis */}
+      <div className="mt-2 pt-4 border-t border-slate-100 px-3 flex-1 flex flex-col min-h-0">
+        <button
+          onClick={handleNewChat}
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] transition-all shadow-md shadow-emerald-500/25 shrink-0"
+        >
+          <Plus size={16} />
+          <span>Mulai Chat Baru</span>
+        </button>
+        <p className="px-1 pt-4 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0">Riwayat Obrolan</p>
+        <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-1 soft-scroll min-h-0">
+          {chatHistoryList.map(chat => (
+            <button key={chat.id} className="w-full text-left px-2.5 py-2.5 rounded-xl hover:bg-emerald-50 transition-colors flex items-start gap-2.5 group">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center shrink-0 transition-colors">
+                <MessageSquare size={15} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-700 truncate">{chat.title}</p>
+                <p className="text-xs text-slate-400">{chat.date}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100 p-3 shrink-0">
         <div className="flex items-center gap-3 px-2 py-2 mb-1">
           <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
             {(userName || '?').charAt(0).toUpperCase()}
